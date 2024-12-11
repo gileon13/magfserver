@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки</title>
+    <script>
+        function addEmail() {
+            const email = document.getElementById('newEmail').value;
+            fetch('/settings/add_email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'email=' + encodeURIComponent(email)
+            }).then(response => response.json())
+              .then(data => {
+                  alert(data.success || data.error);
+                  loadEmails();
+              });
+        }
+
+        function deleteEmail(email) {
+            fetch('/settings/delete_email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'email=' + encodeURIComponent(email)
+            }).then(response => response.json())
+              .then(data => {
+                  alert(data.success || data.error);
+                  loadEmails();
+              });
+        }
+
+        function loadEmails() {
+            fetch('/settings/get_emails')
+                .then(response => response.json())
+                .then(data => {
+                    const emailList = document.getElementById('emailList');
+                    emailList.innerHTML = '';
+                    data.emails.forEach(email => {
+                        const li = document.createElement('li');
+                        li.textContent = email;
+                        const button = document.createElement('button');
+                        button.textContent = 'Удалить';
+                        button.onclick = () => deleteEmail(email);
+                        li.appendChild(button);
+                        emailList.appendChild(li);
+                    });
+                });
+        }
+
+        window.onload = loadEmails;
+    </script>
+    <style>
+        #body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+        body.dark-mode {
+          background-color: #121212;
+          color: #e0e0e0;
+        }
+        body.dark-mode button {
+          background-color: #333;
+          color: white;
+        }
+
+        body.dark-mode button:hover {
+            background-color: #444;
+            color: grey;
+        }
+
+
+
+        }
+
+        #emailListContainer, #addemailContainer, #settingsContainer, #button {
+            max-width: 90%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #emailListContainer {
+
+            width: 400px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+            background-color: #f9f9f9;
+        }
+        body.dark-mode #emailListContainer{
+            background-color: #333;
+            border-color: #555;
+        }
+        #addemailContainer {
+             width: 400px;
+            height: 300px;
+            margin: auto;
+            overflow: auto;
+        }
+
+         #settingsContainer {
+            width: 400px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+            background-color: #f9f9f9;
+        }
+        body.dark-mode #settingsContainer{
+            background-color: #333;
+            border-color: #555;
+        }
+
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+
+        button {
+            width: 250px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #5579cf;
+            border-radius: 15px;
+            background-color: #6591f7;
+            text-align: center;
+        }
+        button:hover {
+            background-color: #3381ff;
+        }
+        #span {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        span.Updated {
+            background-color: #ffffcc;
+            color: #333;
+        }
+
+         #settingsPanel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: #e9edf7;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        body.dark-mode #settingsPanel{
+            background-color: #222;
+            border-color: #555;
+        }
+
+
+        #settingsPanel.open {
+            left: 0;
+        }
+
+        #settingsPanel h1 {
+            margin-top: 0;
+        }
+
+        #settingsToggle {
+            position: fixed;
+            bottom: 50px;
+            left: 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+         body.dark-mode  #settingsToggle{
+            background-color: #333;
+            border-color: #555;
+        }
+
+        #settingsToggle:focus {
+            outline: none;
+        }
+
+        #mainContent {
+            padding: 20px;
+        }
+        /* Контейнер переключателя */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 25px;
+        }
+
+        /* Скрываем стандартный чекбокс */
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* Слайдер переключателя */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 25px; /* Делает края круглые */
+        }
+
+        /* Положение круга переключателя */
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 19px;
+            width: 19px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%; /* Делает круг */
+
+        }
+
+        /* Когда чекбокс отмечен */
+        input:checked + .slider {
+            background-color: #1950bf;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(25px);
+        }
+
+
+    </style>
+</head>
+<body>
+    <h1 style="width: 400px; margin: 20px auto; text-align: center;">Настройки</h1>
+
+    <button id="settingsToggle" onclick="toggleSettingsPanel()">Меню</button>
+    <div id="settingsPanel">
+        <h1>Меню</h1>
+        <a href="/" > <button  type="submit" >Показания</button></a>
+        <br> </br>
+
+        <button id="toggleTheme">Переключить тему</button>
+
+        <form action="{{ url_for('logout') }}" method="GET">
+        <button  type="submit" >Выход</button>
+        </form>
+
+    </div>
+
+    <div id="settingsContainer">
+        <form method="POST">
+
+        <label class="switch">
+            <input type="checkbox" name="notifications_enabled"
+                   {% if settings[0] == 1 %}checked{% endif %}>
+            <span class="slider"></span>
+        </label>
+
+        <br><br>
+
+        <label>Задать пороговые значения температуры:</label>
+        <br>
+        <input type="range" name="min_temp" min="0" max="50" step="1"
+               value="{{ settings[1] }}"
+               oninput="updateValue('min_temp_val', this.value)">
+        <span id="min_temp_val">{{ settings[1] }}</span>
+        <br>
+        <input type="range" name="max_temp" min="0" max="50" step="1"
+               value="{{ settings[2] }}"
+               oninput="updateValue('max_temp_val', this.value)">
+        <span id="max_temp_val">{{ settings[2] }}</span>
+        <br><br>
+
+        <label>Температура DS18B20 #1:</label>
+        <br>
+        <input type="range" name="min_temp_ds18b20_1" min="0" max="50" step="1"
+               value="{{ settings[3] }}"
+               oninput="updateValue('min_temp_ds18b20_1_val', this.value)">
+        <span id="min_temp_ds18b20_1_val">{{ settings[3] }}</span>
+        <br>
+        <input type="range" name="max_temp_ds18b20_1" min="0" max="50" step="1"
+               value="{{ settings[4] }}"
+               oninput="updateValue('max_temp_ds18b20_1_val', this.value)">
+        <span id="max_temp_ds18b20_1_val">{{ settings[4] }}</span>
+        <br><br>
+
+        <label>Температура DS18B20 #2:</label>
+        <br>
+        <input type="range" name="min_temp_ds18b20_2" min="0" max="50" step="1"
+               value="{{ settings[5] }}"
+               oninput="updateValue('min_temp_ds18b20_2_val', this.value)">
+        <span id="min_temp_ds18b20_2_val">{{ settings[5] }}</span>
+        <br>
+        <input type="range" name="max_temp_ds18b20_2" min="0" max="50" step="1"
+               value="{{ settings[6] }}"
+               oninput="updateValue('max_temp_ds18b20_2_val', this.value)">
+        <span id="max_temp_ds18b20_2_val">{{ settings[6] }}</span>
+        <br><br>
+
+        <label>Температура DS18B20 #3:</label>
+        <br>
+        <input type="range" name="min_temp_ds18b20_3" min="0" max="50" step="1"
+               value="{{ settings[7] }}"
+               oninput="updateValue('min_temp_ds18b20_3_val', this.value)">
+        <span id="min_temp_ds18b20_3_val">{{ settings[7] }}</span>
+        <br>
+        <input type="range" name="max_temp_ds18b20_3" min="0" max="50" step="1"
+               value="{{ settings[8] }}"
+               oninput="updateValue('max_temp_ds18b20_3_val', this.value)">
+        <span id="max_temp_ds18b20_3_val">{{ settings[8] }}</span>
+        <br><br>
+
+        <button type="submit">Сохранить</button>
+    </form>
+
+
+    </div>
+
+      <div id="emailListContainer">
+        <h2>Список получателей уведомлений</h2>
+        <ul id="emailList"></ul>
+    </div>
+    <div id="addemailContainer">
+
+        <h2>Добавить адрес электронной почты</h2>
+        <input type="email" id="newEmail" placeholder="Введите email">
+        <button onclick="addEmail()">Добавить</button>
+
+
+    </div>
+
+
+    <script>
+        function updateValue(id, value) {
+            document.getElementById(id).textContent = value;
+        }
+        function toggleSettingsPanel() {
+             const panel = document.getElementById('settingsPanel');
+             panel.classList.toggle('open');
+        }
+        function loadSettings() {
+            fetch('/settings') // Этот маршрут должен возвращать HTML настроек
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('settingsPanel').innerHTML = html;
+                    toggleSettingsPanel();
+                })
+                .catch(error => console.error('Ошибка загрузки настроек:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const toggleButton = document.getElementById('toggleTheme');
+          const body = document.body;
+
+          // Проверяем сохранённую тему из localStorage
+          if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-mode');
+          }
+
+          // Обработчик клика по кнопке
+          toggleButton.addEventListener('click', () => {
+            body.classList.toggle('dark-mode'); // Переключаем класс
+            const isDarkMode = body.classList.contains('dark-mode');
+
+            // Сохраняем выбор пользователя
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+          });
+        });
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Данные с датчиков</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+        body.dark-mode {
+          background-color: #121212;
+          color: #e0e0e0;
+        }
+        body.dark-mode button {
+          background-color: #333;
+          color: white;
+        }
+
+        body.dark-mode button:hover {
+            background-color: #444;
+            color: grey;
+        }
+
+        body.dark-mode #currentData {
+            background-color: #333;
+            border-color: #555;
+        }
+
+        body.dark-mode #currentData_1{
+            background-color: #333;
+            border-color: #555;
+        }
+        body.dark-mode #checkboxContainer{
+            background-color: #333;
+            border-color: #555;
+        }
+         body.dark-mode #waterLevelContainer{
+            background-color: #333;
+            border-color: #555;
+        }
+        }
+
+        #chartContainer, #currentData, #currentData_1, #checkboxContainer, #waterLevelContainer, #button {
+            max-width: 90%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #chartContainer {
+            width: 400px;
+            height: 300px;
+            margin: auto;
+            overflow: auto;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+
+        button {
+            width: 250px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #5579cf;
+            border-radius: 15px;
+            background-color: #6591f7;
+            text-align: center;
+        }
+        button:hover {
+            background-color: #3381ff;
+        }
+        #span {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        span.Updated {
+            background-color: #ffffcc;
+            color: #333;
+        }
+
+
+        #currentData {
+            width: 400px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+            background-color: #f9f9f9;
+        }
+        #currentData_1 {
+            width: 400px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 1.2em;
+            background-color: #f9f9f9;
+        }
+
+        #sliderContainer {
+            width: 400px;
+            margin: 20px auto;
+            text-align: center;
+        }
+         #checkboxContainer {
+            width: 400px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f3f4f6;
+            text-align: center;
+        }
+
+        #checkboxContainer label {
+            display: inline-block;
+            margin-right: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 1em;
+        }
+
+        #waterLevelContainer {
+            width: 400px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f3f4f6;
+            text-align: center;
+        }
+        .warning {
+            color: red;
+            font-weight: bold;
+        }
+         #settingsPanel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: #e9edf7;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        body.dark-mode #settingsPanel{
+            background-color: #222;
+            border-color: #555;
+        }
+
+
+        #settingsPanel.open {
+            left: 0;
+        }
+
+        #settingsPanel h1 {
+            margin-top: 0;
+        }
+
+        #settingsToggle {
+            position: fixed;
+            bottom: 50px;
+            left: 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+         body.dark-mode  #settingsToggle{
+            background-color: #333;
+            border-color: #555;
+        }
+
+        #settingsToggle:focus {
+            outline: none;
+        }
+
+        #mainContent {
+            padding: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <h1 style="width: 400px; margin: 20px auto; text-align: center;">Данные с датчиков</h1>
+    <button id="settingsToggle" onclick="toggleSettingsPanel()">Меню</button>
+    <div id="settingsPanel">
+        <h1>Меню</h1>
+        <a href="settings" > <button  type="submit" >Настройки</button></a>
+        <br> </br>
+
+        <button id="toggleTheme">Переключить тему</button>
+
+        <form action="{{ url_for('logout') }}" method="GET">
+        <button  type="submit" >Выход</button>
+        </form>
+
+    </div>
+
+
+
+
+
+    <div id="deviceStatusContainer" style="width: 400px; margin: 20px auto; text-align: center;">
+        <p><i class="fa-solid fa-wifi" style="color: green;"></i> Устройство <span id="deviceStatus">Проверка...</span></p>
+    </div>
+
+    <div id="currentData_1">
+        <p><i class="fas fa-thermometer-half fa-2x" style="color: red;"></i>Температура: <span id="currentTemperature">-</span>°C</p>
+        <p><i class="fas fa-tint fa-2x" style="color: LightBlue;"></i>Влажность: <span id="currentHumidity">-</span>%</p>
+    </div>
+
+    <div id="checkboxContainer">
+        <label><input type="checkbox" id="temperatureCheckbox" checked> Температура (DHT)</label>
+        <label><input type="checkbox" id="humidityCheckbox" checked> Влажность</label>
+        <label><input type="checkbox" id="ds18b20_1Checkbox" checked> Температура DS18B20 #1</label>
+        <label><input type="checkbox" id="ds18b20_2Checkbox" checked> Температура DS18B20 #2</label>
+        <label><input type="checkbox" id="ds18b20_3Checkbox" checked> Температура DS18B20 #3</label>
+    </div>
+
+    <div id="chartContainer">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <div id="sliderContainer">
+        <label for="dataRange">Показать данные за:</label>
+        <select id="dataRange">
+            <option value="10">10 мин</option>
+            <option value="60">Час</option>
+            <option value="120"> 2 Часа</option>
+            <option value="all">Все время</option>
+        </select>
+    </div>
+
+    <!-- Блок для отображения текущих данных -->
+    <div id="currentData">
+
+        <p>Температура DS18B20 #1: <span id="currentDS18B20_1">-</span>°C</p>
+        <p>Температура DS18B20 #2: <span id="currentDS18B20_2">-</span>°C</p>
+        <p>Температура DS18B20 #3: <span id="currentDS18B20_3">-</span>°C</p>
+        <p><i class="fa-solid fa-door-closed"></i>Состояние двери: <span id="currentGerkoState">-</span></p> <!-- Новый блок для отображения состояния геркона -->
+    </div>
+    <div id="waterLevelContainer"> Уровень воды
+        <p> <span id="waterLevel">-</span></p>
+        <p id="leakWarning" class="warning" style="display: none;"><i class="fas fa-water fa-2x" style="color: Blue;"></i>Обнаружена протечка!</p>
+    </div>
+
+
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Температура (DHT)',
+                        data: [],
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        hidden: false,
+                        pointRadius: 0
+
+                    },
+                    {
+                        label: 'Влажность',
+                        data: [],
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        hidden: false,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Температура DS18B20 #1',
+                        data: [],
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        hidden: false,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Температура DS18B20 #2',
+                        data: [],
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1,
+                        hidden: false,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Температура DS18B20 #3',
+                        data: [],
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1,
+                        hidden: false,
+                        pointRadius: 0
+                    }
+
+                ]
+            },
+            options: {
+                scales: {
+                    x: {
+
+                        ticks: {
+                            font: {
+                                size: 8
+                            },
+                            callback: function(value, index) {
+                                const date = new Date(chart.data.labels[index]);
+                                return date.toLocaleDateString('ru-RU', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                }) + ' ' + date.toLocaleTimeString('ru-RU', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                });
+                            }
+
+                        }
+
+                    },
+                    y: {
+
+                        beginAtZero: false
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        mode: 'nearest',
+                        intersect: false,
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                const label = tooltipItem.dataset.label || '';
+                                const value = tooltipItem.raw;
+                                return label + ': ' + value.toFixed(2) + '°C';
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        let displayedLabelsCount = 10;
+
+
+
+        // Обработчики для чекбоксов
+        document.getElementById('temperatureCheckbox').addEventListener('change', updateChart);
+        document.getElementById('humidityCheckbox').addEventListener('change', updateChart);
+        document.getElementById('ds18b20_1Checkbox').addEventListener('change', updateChart);
+        document.getElementById('ds18b20_2Checkbox').addEventListener('change', updateChart);
+        document.getElementById('ds18b20_3Checkbox').addEventListener('change', updateChart);
+
+         // Обработчик для выпадающего списка
+        document.getElementById('dataRange').addEventListener('change', (event) => {
+            const selectedValue = event.target.value;
+            displayedLabelsCount = selectedValue === 'all' ? null : parseInt(selectedValue, 10);
+            fetchData();
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+          const toggleButton = document.getElementById('toggleTheme');
+          const body = document.body;
+
+          // Проверяем сохранённую тему из localStorage
+          if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-mode');
+          }
+
+          // Обработчик клика по кнопке
+          toggleButton.addEventListener('click', () => {
+            body.classList.toggle('dark-mode'); // Переключаем класс
+            const isDarkMode = body.classList.contains('dark-mode');
+
+            // Сохраняем выбор пользователя
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+          });
+        });
+
+        function fetchData() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    const tempDHTData = [];
+                    const humidityData = [];
+                    const tempDS18B20_1 = [];
+                    const tempDS18B20_2 = [];
+                    const tempDS18B20_3 = [];
+                    const waterLevelData = [];
+                    const labels = [];
+                    let gerkonState = '';
+
+                    data.forEach(row => {
+                        const timestamp = new Date(row[8]);
+                        labels.push(timestamp);
+                        tempDHTData.push(row[1]);
+                        humidityData.push(row[2]);
+                        tempDS18B20_1.push(row[3]);
+                        tempDS18B20_2.push(row[4]);
+                        tempDS18B20_3.push(row[5]);
+                        gerkonState = row[6] === 1 ? 'Закрыто' : 'Открыто';
+                        waterLevelData.push(row[7]);
+                    });
+
+                    chart.data.labels = labels.slice(-displayedLabelsCount);
+                    chart.data.datasets[0].data = tempDHTData.slice(-displayedLabelsCount);
+                    chart.data.datasets[1].data = humidityData.slice(-displayedLabelsCount);
+                    chart.data.datasets[2].data = tempDS18B20_1.slice(-displayedLabelsCount);
+                    chart.data.datasets[3].data = tempDS18B20_2.slice(-displayedLabelsCount);
+                    chart.data.datasets[4].data = tempDS18B20_3.slice(-displayedLabelsCount);
+
+                    document.getElementById('currentTemperature').innerText = tempDHTData[tempDHTData.length - 1] || '-';
+                    document.getElementById('currentHumidity').innerText = humidityData[humidityData.length - 1] || '-';
+                    document.getElementById('currentDS18B20_1').innerText = tempDS18B20_1[tempDS18B20_1.length - 1] || '-';
+                    document.getElementById('currentDS18B20_2').innerText = tempDS18B20_2[tempDS18B20_2.length - 1] || '-';
+                    document.getElementById('currentDS18B20_3').innerText = tempDS18B20_3[tempDS18B20_3.length - 1] || '-';
+                    document.getElementById('currentGerkoState').innerText = gerkonState;
+                    const waterLevel = waterLevelData[waterLevelData.length - 1] || 0;
+                    document.getElementById('waterLevel').innerText = waterLevel;
+                    if (waterLevel >= 150) {
+                        document.getElementById('leakWarning').style.display = 'block';
+                    } else {
+                        document.getElementById('leakWarning').style.display = 'none';
+                    }
+
+                    chart.update();
+                })
+                .catch(error => console.error('Ошибка при получении данных:', error));
+        }
+
+        function fetchDeviceStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('deviceStatus').innerText = data.device_status;
+                })
+                .catch(error => console.error('Ошибка при получении статуса устройства:', error));
+        }
+
+        // Запрашиваем статус устройства каждые 5 секунд
+        fetchDeviceStatus();
+        setInterval(fetchDeviceStatus, 5000);
+
+
+        function updateChart() {
+            chart.data.datasets[0].hidden = !document.getElementById('temperatureCheckbox').checked;
+            chart.data.datasets[1].hidden = !document.getElementById('humidityCheckbox').checked;
+            chart.data.datasets[2].hidden = !document.getElementById('ds18b20_1Checkbox').checked;
+            chart.data.datasets[3].hidden = !document.getElementById('ds18b20_2Checkbox').checked;
+            chart.data.datasets[4].hidden = !document.getElementById('ds18b20_3Checkbox').checked;
+            chart.update();
+        }
+
+        fetchData();
+        setInterval(fetchData, 5000); // Автообновление данных каждые 5 секунд
+
+        function toggleSettingsPanel() {
+             const panel = document.getElementById('settingsPanel');
+             panel.classList.toggle('open');
+        }
+        function loadSettings() {
+            fetch('/settings') // Этот маршрут должен возвращать HTML настроек
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('settingsPanel').innerHTML = html;
+                    toggleSettingsPanel();
+                })
+                .catch(error => console.error('Ошибка загрузки настроек:', error));
+}
+
+    </script>
+
+</body>
+</html>
